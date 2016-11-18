@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# http://www.chip-community.org/index.php/Compile_the_Linux_kernel_for_CHIP
+
+if [ "$1" == "COMPILE" ]; then
+    . config
+    cd RTL8723BS
+    cpuCores=$(grep -c ^processor /proc/cpuinfo)
+    # compile
+    make -j$cpuCores CONFIG_PLATFORM_ARM_SUNxI=y ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- -C $WORKSPACE/CHIP-linux/ M=$PWD CONFIG_RTL8723BS=m INSTALL_MOD_PATH=$WORKSPACE/bin/ || exit $?
+    # install modules
+    make -j$cpuCores CONFIG_PLATFORM_ARM_SUNxI=y ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- -C $WORKSPACE/CHIP-linux/ M=$PWD CONFIG_RTL8723BS=m INSTALL_MOD_PATH=$WORKSPACE/bin/ modules_install || exit $?
+    exit
+fi
+
+. config
+. functions.sh.inc
+
+schrootBeginSession || exit $?
+schroot -r -c $SESSION_NAME -- $0 COMPILE || exit $?

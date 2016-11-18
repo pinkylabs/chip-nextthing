@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ "$1" == "INSTALL" ]; then
+    apt-get -y install curl
+
+    echo Adding apt respository...
+    echo deb http://emdebian.org/tools/debian/ jessie main > /etc/apt/sources.list.d/crosstools.list || exit $?
+    
+    curl --show-error --silent http://emdebian.org/tools/debian/emdebian-toolchain-archive.key | apt-key add - || exit $?
+    dpkg --add-architecture armhf || exit $?
+    apt-get update || exit $?
+    apt-get -y install crossbuild-essential-armhf || exit $?
+    # extras
+    apt-get -y install bc ncurses-dev || exit $?
+    exit
+fi
+
+if [ $EUID -eq 0 ]; then
+    echo "Root not needed any more"
+    exit 1
+fi
+
+. functions.sh.inc
+. config
+
+schrootBeginSession || exit $?
+
+schroot -r -c $SESSION_NAME -u root -- $0 INSTALL || exit $?

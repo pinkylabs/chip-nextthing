@@ -1,0 +1,12 @@
+#!/bin/bash
+
+. config
+
+[ -d "CHIP-linux" ] || {
+    git clone --single-branch --branch $KernelGitBranch https://github.com/NextThingCo/CHIP-linux.git || exit $?;
+    } || exit $?
+
+[ -d "RTL8723BS" ] || {
+    git clone --single-branch --branch $Rtl8723bsGitBranch https://github.com/NextThingCo/RTL8723BS.git || exit $?;
+    ( cd RTL8723BS; for i in debian/patches/0*; do  echo $i; patch -p 1 <$i ; done ) || exit $?
+    } || exit $?

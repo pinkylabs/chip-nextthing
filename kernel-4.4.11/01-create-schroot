@@ -1,0 +1,32 @@
+#!/bin/bash
+. functions.sh.inc
+. config
+
+# https://wiki.debian.org/CrossCompiling#Install_tools
+if [ $EUID -ne 0 ]; then
+    echo "Needs root"
+    exit 1
+fi
+
+# install sbuild
+apt-get install sbuild || exit $?
+
+# check if schroot already axists
+schrootName=$SCHROOT_SUITE-$SCHROOT_ARCH$SCHROOT_SUFFIX
+key=$(schroot -l | grep $schrootName)
+[[ -z $key ]] && confirm "No schroot ($schrootName) found, create one?" && {
+    sbuild-createchroot --make-sbuild-tarball=/srv/chroots/$schrootName.tgz --chroot-suffix=$SCHROOT_SUFFIX $SCHROOT_SUITE /srv/chroots/$schrootName http://httpredir.debian.org/debian/ || exit $? ;
+    
+    # http://osdir.com/ml/general/2016-10/msg34940.html
+    echo "I: installing mc..."
+    sbuild-apt $key apt-get install mc file libffi6 libglib2.0-0 libglib2.0-data libgpm2 libmagic1 libssh2-1 libxml2 mc-data mime-support sgml-base shared-mime-info unzip xdg-user-dirs xml-core || exit $? ;
+}
+key=$(schroot -l | grep $schrootName)
+[[ -z $key ]] && { exit 1; }
+echo "I: shroot: $key"
+
+profile=$(cat /etc/schroot/chroot.d/$schrootName* | grep profile)
+[ "profile=default" != "$profile" ] && { echo "E: Fix profile=default in $(ls /etc/schroot/chroot.d/$schrootName* )"; exit 1; }
+
+echo "Now add a user access to chroot:"
+echo sbuild-adduser \<your-username\>

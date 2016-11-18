@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [ "$1" == "CONFIGURE" ]; then
+    cd CHIP-linux
+    make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- menuconfig
+    exit
+fi
+
+. config
+. functions.sh.inc
+
+configDiff=$KernelConfigOriginal.diff
+kernelConfigFile=CHIP-linux/.config
+
+cp -v $KernelConfigOriginal $kernelConfigFile
+
+if [ -r "$configDiff" ]; then
+    echo "Merging config diff: $configDiff"
+    cat $configDiff >> $kernelConfigFile
+else
+    echo "Using original config: $KernelConfigOriginal"
+    echo "IMPORTANT: Make sure you change your local version"
+    echo " General setup  ---\>"
+    echo "  () Local version - append to kernel release"
+    echo CONFIG_LOCALVERSION=\"-$(whoami)$(date +%Y%m%d)\" >> $kernelConfigFile
+    read -p "Enter to continue..."
+fi
+
+schrootBeginSession || exit $?
+schroot -r -c $SESSION_NAME -- $0 CONFIGURE || exit $?
+
+diff --unchanged-line-format= --old-line-format= --new-line-format='%L' $KernelConfigOriginal $kernelConfigFile  > $configDiff
+cat $configDiff

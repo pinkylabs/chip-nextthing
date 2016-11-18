@@ -1,0 +1,20 @@
+# schroot session name
+    SESSION_NAME=$(whoami)-nxt-chip
+
+# source tags
+# default from http://www.chip-community.org/index.php/Compile_the_Linux_kernel_for_CHIP
+    KernelGitBranch="debian/4.4.11-ntc-1"
+    Rtl8723bsGitBranch="debian"
+    KernelGitBranch="4.4.11-ntc-9" # pinky selection
+
+# kernel original config file
+    KernelConfigOriginal="config-4.4.11-ntc"
+
+#defaults of schroot
+    SCHROOT_SUITE=$(lsb_release -c -s)
+    SCHROOT_ARCH=$(dpkg --print-architecture)
+    SCHROOT_SUFFIX="-schroot"
+
+# auto-parameters
+WORKSPACE=$(pwd)/
+
