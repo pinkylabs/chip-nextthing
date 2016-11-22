@@ -7,14 +7,18 @@ version=$(ls -1 bin/lib/modules)
 mkdir -p bin/boot/
 
 cp -v CHIP-linux/arch/arm/boot/zImage bin/boot/vmlinuz-$version
-cp -v CHIP-linux/.config bin/boot/config-$version
+cp -v CHIP-linux/.config bin/boot/.config-$version
 cp -v CHIP-linux/System.map bin/boot/System.map-$version
 
 # http://www.chip-community.org/index.php/Compile_the_Linux_kernel_for_CHIP
 echo \#!/bin/bash > bin/install-$version
-echo /usr/sbin/mkinitramfs -o initrd.img-$version $version >> bin/install-$version
-echo mkimage -A arm -T ramdisk -C none -d initrd.img-$version initrd.uimage-$version >> bin/install-$version
-echo echo To actually replace the kernel, make a symbolink link or copy vmlinuz-$version to /boot/zImage >> bin/install-$version
+echo cd /boot
+echo Generating initramfs...
+echo /usr/sbin/mkinitramfs -o initrd.img-$version $version >> bin/install-$version || exit $?
+echo Generatin U-Boot image...
+echo mkimage -A arm -T ramdisk -C none -d initrd.img-$version initrd.uimage-$version >> bin/install-$version || exit $?
+echo Done.
+echo echo To actually replace the kernel, make a symbolink link or copy vmlinuz-$version to /boot/zImage >> bin/install-$version || exit $?
 chmod +x bin/install-$version
 
 (cd bin; tar -czf ../chip-kernel-$version.tgz *;) || exit $?
